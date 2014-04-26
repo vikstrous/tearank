@@ -2,7 +2,6 @@ from bottle import route, run, template
 import urllib2
 import numpy as np
 from scipy.sparse import csc_matrix
-from pprint import pprint
 
 def pageRank(G, s = .85, maxerr = .001):
     """
@@ -55,23 +54,6 @@ def pageRank(G, s = .85, maxerr = .001):
     # return normalized pagerank
     return r/sum(r)
 
-
-
-
-if __name__=='__main__':
-    # Example extracted from 'Introduction to Information Retrieval'
-    G = np.array([[0,0,1,0,0,0,0],
-                  [0,1,1,0,0,0,0],
-                  [1,0,1,1,0,0,0],
-                  [0,0,0,1,1,0,0],
-                  [0,0,0,0,0,0,1],
-                  [0,0,0,0,0,1,1],
-                  [0,0,0,1,1,0,1]])
-
-    print pageRank(G,s=.86)
-
-
-
 @route('/')
 def index():
   c = urllib2.urlopen('https://docs.google.com/spreadsheets/d/14h4ckElbR59fHxpNSdpebt_XlR4Wy4zux43E1QgyNMw/export?format=csv&id=14h4ckElbR59fHxpNSdpebt_XlR4Wy4zux43E1QgyNMw&gid=1242103736')
@@ -84,7 +66,8 @@ def index():
 
   for row in arr[1:]:
     date, winner, loser = row.split(',')
-    teas.append((winner, loser))
+    if len(winner) and len(loser):
+      teas.append((winner, loser))
 
   for tea in teas:
     winner, loser = tea
@@ -110,16 +93,9 @@ def index():
       loss_count = losses[winner][loser]
       # put an edge from the loser to the winner
       mat[loser][winner] = 0 if win_count == 0 else float(win_count) / (win_count + loss_count)
-      print names[loser], 'to', names[winner], 0 if win_count == 0 else float(win_count) / (win_count + loss_count)
 
-  print indices
-  print names
-  print wins
-  print losses
-  pprint(mat)
   G = np.array(mat)  
   scores = pageRank(G,s=.86)
-  print scores
 
   labeled_scores = zip(names, scores)
   sorted_scores = sorted(labeled_scores, key=lambda s: s[1])
@@ -127,8 +103,6 @@ def index():
   response = ""
   for i in range(len(names)-1, -1, -1):
     response += str(len(names) - i) + ": " + str(sorted_scores[i][0]) + " (" + str(sorted_scores[i][1])+ ")<br/>"
-
-
 
   return response
 
